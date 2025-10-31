@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dulcería - Productos</title>
+
+  <style>
+    :root {
+      --color-principal: #f43f5e; /* rosa dulce */
+      --color-secundario: #fff7ed; /* fondo claro */
+      --color-texto: #1f2937;
+      --color-venta: #16a34a;
+      --color-footer: #1e40af;
+    }
+
+    body {
+      font-family: 'Comic Sans MS', 'Segoe UI', sans-serif;
+      background-color: var(--color-secundario);
+      color: var(--color-texto);
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: var(--color-principal);
+      color: white;
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 2rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+    }
+
+    .buscador {
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .buscador input {
+      width: 100%;
+      max-width: 500px;
+      padding: 0.8rem;
+      border-radius: 10px;
+      border: 2px solid #fbbf24;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+
+    .producto {
+      background: #ffffff;
+      border-radius: 15px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .producto:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+
+    .producto img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #f3f4f6;
+    }
+
+    .producto-info {
+      flex: 1;
+    }
+
+    .nombre {
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .codigo {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+
+    .precio-venta {
+      font-weight: bold;
+      font-size: 1.4rem;
+      color: var(--color-venta);
+    }
+
+    .mensaje {
+      text-align: center;
+      color: #6b7280;
+      margin-top: 2rem;
+      font-size: 1.2rem;
+    }
+
+    footer {
+      background: var(--color-footer);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 480px) {
+      header { font-size: 1.5rem; }
+      .precio-venta { font-size: 1.2rem; }
+      .producto { flex-direction: column; align-items: center; }
+      .producto img { width: 80px; height: 80px; }
+    }
+  </style>
+</head>
+<body>
+  <header>Dulcería - Productos</header>
+
+  <main>
+    <div class="buscador">
+      <input id="buscador" type="text" placeholder="Buscar por nombre o código..." />
+    </div>
+
+    <section id="lista-productos">
+      <p class="mensaje">Cargando productos...</p>
+    </section>
+  </main>
+
+  <footer>
+    📍 Ubicación: Calle Dulce 123, Torreón, Coahuila <br>
+    📞 Teléfono: 871-123-4567
+  </footer>
+
+  <script>
+    const API_URL = "http://localhost:3000/api/products/"; // Cambiar al deploy de Render
+    let productos = [];
+
+    function normalizar(texto) {
+      return String(texto)
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function renderProductos(lista) {
+      const contenedor = document.getElementById("lista-productos");
+
+      if (!lista || lista.length === 0) {
+        contenedor.innerHTML = '<p class="mensaje">No hay productos disponibles.</p>';
+        return;
+      }
+
+      contenedor.innerHTML = lista.map(p => `
+        <div class="producto">
+          <img src="${p.imageUrl || 'https://via.placeholder.com/100'}" alt="${p.description}" />
+          <div class="producto-info">
+            <div class="nombre">${p.description}</div>
+            <div class="codigo">${p.code || ''}</div>
+            <div class="precio-venta">Precio Venta: $${p.salePrice ? Number(p.salePrice).toFixed(2) : "—"}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function cargarProductos() {
+      const contenedor = document.getElementById("lista-productos");
+      contenedor.innerHTML = '<p class="mensaje">Cargando productos...</p>';
+
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        productos = data.data || [];
+         // Invertimos el orden
+        productos.reverse();
+
+        renderProductos(productos);
+      } catch (error) {
+        contenedor.innerHTML = '<p class="mensaje">Error al cargar productos.</p>';
+        console.error(error);
+      }
+    }
+
+    document.getElementById("buscador").addEventListener("input", (e) => {
+      const texto = normalizar(e.target.value);
+      const filtrados = productos.filter(p => {
+        const desc = normalizar(p.description || "");
+        const code = normalizar(p.code || "");
+        return desc.includes(texto) || code.includes(texto);
+      });
+      renderProductos(filtrados);
+    });
+
+    cargarProductos();
+  </script>
+</body>
+</html>
