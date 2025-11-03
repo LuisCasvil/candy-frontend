@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista de Productos</title>
+
+  <style>
+    :root {
+      --color-principal: #1e40af;
+      --color-secundario: #f8fafc;
+      --color-texto: #1f2937;
+      --color-precio: #16a34a;
+      --color-costo: #dc2626;
+      --color-mayoreo: #f59e0b;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--color-secundario);
+      color: var(--color-texto);
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: var(--color-principal);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+    }
+
+    .buscador {
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .buscador input {
+      width: 100%;
+      max-width: 500px;
+      padding: 0.7rem;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 1rem;
+    }
+
+    .producto {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      transition: transform 0.1s;
+    }
+
+    .producto:hover {
+      transform: scale(1.01);
+    }
+
+    .producto-info {
+      margin-bottom: 0.5rem;
+    }
+
+    .nombre {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .codigo {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .precios {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .precio-venta {
+      color: var(--color-precio);
+    }
+
+    .precio-costo {
+      color: var(--color-costo);
+    }
+
+    .precio-mayoreo {
+      color: var(--color-mayoreo);
+    }
+
+    .mensaje {
+      text-align: center;
+      color: #6b7280;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 480px) {
+      header {
+        font-size: 1.25rem;
+      }
+      .precios {
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>Lista de Productos</header>
+
+  <main>
+    <div class="buscador">
+      <input id="buscador" type="text" placeholder="Buscar por nombre o código..." />
+    </div>
+
+    <section id="lista-productos">
+      <p class="mensaje">Cargando productos...</p>
+    </section>
+  </main>
+
+  <script>
+    const API_URL = "https://candy-backend-vd23.onrender.com/api/products/";
+    let productos = [];
+
+    function normalizar(texto) {
+      return texto
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function renderProductos(lista) {
+      const contenedor = document.getElementById("lista-productos");
+
+      if (!lista || lista.length === 0) {
+        contenedor.innerHTML = '<p class="mensaje">No hay productos disponibles.</p>';
+        return;
+      }
+
+      contenedor.innerHTML = lista.map(p => `
+        <div class="producto">
+          <div class="producto-info">
+            <div class="nombre">${p.description}</div>
+            <div class="codigo">${p.code || ''}</div>
+            <div class="stock"> stock: ${p.stock || ''}</div>
+
+          </div>
+          <div class="precios">
+            <div class="precio-costo">Costo: $${p.costPrice ? Number(p.costPrice).toFixed(2) : "—"}</div>
+            <div class="precio-mayoreo">Mayoreo: $${p.bulkPrice ? Number(p.bulkPrice).toFixed(2) : "—"}</div>
+            <div class="precio-venta">Venta: $${p.salePrice ? Number(p.salePrice).toFixed(2) : "—"}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function cargarProductos() {
+      const contenedor = document.getElementById("lista-productos");
+      contenedor.innerHTML = '<p class="mensaje">Cargando productos...</p>';
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        productos = data.data || [];
+        renderProductos(productos);
+      } catch (error) {
+        contenedor.innerHTML = '<p class="mensaje">Error al cargar productos.</p>';
+        console.error(error);
+      }
+    }
+
+    document.getElementById("buscador").addEventListener("input", (e) => {
+      const texto = normalizar(e.target.value);
+      const filtrados = productos.filter(p => {
+        const desc = normalizar(p.description || "");
+        const code = normalizar(p.code || "");
+        return desc.includes(texto) || code.includes(texto);
+      });
+      renderProductos(filtrados);
+    });
+
+    cargarProductos();
+  </script>
+</body>
+</html>
