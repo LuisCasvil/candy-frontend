@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Corte del Día - Candy Store</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #ffb6c1, #ff69b4);
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    h1 {
+      font-size: 2.2em;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 400px;
+      backdrop-filter: blur(10px);
+    }
+
+    .label {
+      font-size: 1.2em;
+      margin-top: 10px;
+      color: #fff;
+    }
+
+    input {
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      width: 90%;
+      margin-top: 10px;
+      font-size: 1em;
+      text-align: center;
+    }
+
+    button {
+      background-color: #ff4081;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      padding: 12px 20px;
+      font-size: 1.1em;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #ff6090;
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    .logo {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 80px;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.8em;
+      }
+      .card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <img src="./assets/logoCandy.png" alt="Logo Candy Store" class="logo">
+  <h1>🍭 Corte del Día 🍬</h1>
+  <div class="card">
+    <div class="label">Selecciona la fecha</div>
+    <input type="date" id="fechaInput" />
+    <button onclick="consultarVenta()">Consultar</button>
+    <div class="result" id="resultado"></div>
+  </div>
+
+  <script>
+    async function consultarVenta() {
+      const fecha = document.getElementById("fechaInput").value;
+      const resultado = document.getElementById("resultado");
+
+      if (!fecha) {
+        resultado.textContent = "⚠️ Selecciona una fecha.";
+        return;
+      }
+
+      resultado.textContent = "Consultando...";
+      try {
+        const res = await fetch(`http://localhost:3000/api/saleTicket/?date=${fecha}`);
+        const data = await res.json();
+
+        if (data.success) {
+          resultado.innerHTML = `💰 Total vendido el <b>${data.data.sale_date}</b>: <br><span style="font-size:2em;">$${data.data.total_sales}</span>`;
+        } else {
+          resultado.textContent = "No se encontraron datos para esa fecha.";
+        }
+      } catch (error) {
+        resultado.textContent = "❌ Error al consultar la venta.";
+      }
+    }
+  </script>
+</body>
+</html>
