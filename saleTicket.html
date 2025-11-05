@@ -111,7 +111,7 @@
 
       resultado.textContent = "Consultando...";
       try {
-        const res = await fetch(`http://localhost:3000/api/saleTicket/?date=${fecha}`);
+        const res = await fetch(`https://candy-backend-vd23.onrender.com/api/saleTicket/?date=${fecha}`);
         const data = await res.json();
 
         if (data.success) {
